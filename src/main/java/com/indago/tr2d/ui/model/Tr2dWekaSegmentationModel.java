@@ -20,7 +20,7 @@ import com.indago.io.DoubleTypeImgLoader;
 import com.indago.io.IntTypeImgLoader;
 import com.indago.io.ProjectFolder;
 import com.indago.tr2d.Tr2dContext;
-import com.indago.tr2d.Tr2dLog;
+import com.indago.tr2d.plugins.seg.Tr2dWekaSegmentationPlugin;
 import com.indago.ui.bdv.BdvOwner;
 import com.indago.util.converter.IntTypeThresholdConverter;
 import com.univocity.parsers.csv.CsvParser;
@@ -73,7 +73,7 @@ public class Tr2dWekaSegmentationModel implements BdvOwner {
 			this.projectFolder = parentFolder.addFolder( "weka" );
 		} catch ( final IOException e ) {
 			this.projectFolder = null;
-			Tr2dLog.log.error( "Subfolder for weka segmentation hypotheses could not be created." );
+			Tr2dWekaSegmentationPlugin.log.error( "Subfolder for weka segmentation hypotheses could not be created." );
 			e.printStackTrace();
 		}
 
@@ -87,7 +87,7 @@ public class Tr2dWekaSegmentationModel implements BdvOwner {
 					try {
 						listThresholds.add( Double.parseDouble( value ) );
 					} catch ( final NumberFormatException e ) {
-						Tr2dLog.log.error( "Could not parse threshold value: " + value );
+						Tr2dWekaSegmentationPlugin.log.error( "Could not parse threshold value: " + value );
 					} catch ( final Exception e ) {
 					}
 				}
@@ -183,11 +183,11 @@ public class Tr2dWekaSegmentationModel implements BdvOwner {
 		int i = 0;
 		for ( final String absolutePath : listClassifierFilenames ) {
 			i++;
-			Tr2dLog.log.trace( String.format( "Classifier %d of %d -- %s", i, listClassifierFilenames.size(), absolutePath ) );
+			Tr2dWekaSegmentationPlugin.log.trace( String.format( "Classifier %d of %d -- %s", i, listClassifierFilenames.size(), absolutePath ) );
 
 			final File cf = new File( absolutePath );
 			if ( !cf.exists() || !cf.canRead() )
-				Tr2dLog.log.error( String.format( "Given classifier file cannot be read (%s)", absolutePath ) );
+				Tr2dWekaSegmentationPlugin.log.error( String.format( "Given classifier file cannot be read (%s)", absolutePath ) );
 			loadClassifier( cf );
 
     		// classify frames

@@ -4,7 +4,7 @@
 package com.indago.data.segmentation;
 
 import com.indago.fkt.Function1D;
-import com.indago.tr2d.Tr2dLog;
+import com.indago.tr2d.plugins.seg.Tr2dWekaSegmentationPlugin;
 
 import net.imglib2.RandomAccess;
 import net.imglib2.RandomAccessibleInterval;
@@ -322,7 +322,7 @@ public class ParaMaxFlow< T extends RealType< T > > {
 
 	public long solve( final double lambdaMin, final double lambdaMax ) {
 		final long solutions = parametric.Solve( lambdaMin, lambdaMax );
-		Tr2dLog.log.info( " >>>>> ParaMaxFlow solutions found: " + solutions + " <<<<<" );
+		Tr2dWekaSegmentationPlugin.log.info( " >>>>> ParaMaxFlow solutions found: " + solutions + " <<<<<" );
 		regionsImg = createRegionsImg();
 		return solutions;
 	}

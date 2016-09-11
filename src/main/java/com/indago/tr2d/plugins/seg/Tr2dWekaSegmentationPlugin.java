@@ -8,6 +8,8 @@ import java.util.List;
 import javax.swing.JPanel;
 
 import org.scijava.plugin.Plugin;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.indago.tr2d.ui.model.Tr2dModel;
 import com.indago.tr2d.ui.model.Tr2dWekaSegmentationModel;
@@ -27,6 +29,8 @@ public class Tr2dWekaSegmentationPlugin implements Tr2dSegmentationPlugin {
 
 	private Tr2dModel tr2dModel;
 	private Tr2dWekaSegmentationModel model;
+
+	public static Logger log = LoggerFactory.getLogger( Tr2dWekaSegmentationPlugin.class );
 
 	/**
 	 * @see com.indago.tr2d.plugins.seg.Tr2dSegmentationPlugin#getInteractionPanel()
@@ -75,5 +79,13 @@ public class Tr2dWekaSegmentationPlugin implements Tr2dSegmentationPlugin {
 	@Override
 	public String getUiName() {
 		return "weka segmentation";
+	}
+
+	/**
+	 * @see com.indago.tr2d.plugins.seg.Tr2dSegmentationPlugin#getLogger()
+	 */
+	@Override
+	public Logger getLogger() {
+		return log;
 	}
 }
