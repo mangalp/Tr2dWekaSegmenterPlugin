@@ -71,6 +71,7 @@ public class Tr2dWekaSegmentationPlugin implements Tr2dSegmentationPlugin {
 		this.tr2dModel = model;
 		this.model = new Tr2dWekaSegmentationModel( tr2dModel.getSegmentationModel(), tr2dModel.getSegmentationModel().getProjectFolder() );
 		panel = new Tr2dWekaSegmentationPanel( this.model );
+		log.info( "Tr2dSegmentationImportPlugin is set up." );
 	}
 
 	/**
