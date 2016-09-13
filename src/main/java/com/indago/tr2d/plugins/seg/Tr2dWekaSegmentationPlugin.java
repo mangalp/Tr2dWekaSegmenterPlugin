@@ -60,7 +60,7 @@ public class Tr2dWekaSegmentationPlugin implements Tr2dSegmentationPlugin {
 	 */
 	@Override
 	public List< RandomAccessibleInterval< IntType > > getOutputs() {
-		return model.getSegmentHypotheses();
+		return model.getSumImages();
 	}
 
 	/**

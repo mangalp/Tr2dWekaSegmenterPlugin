@@ -65,6 +65,7 @@ public class SilentWekaSegmenter< T extends NumericType< T > > {
 			final RandomAccessibleInterval< T > img,
 			final int sliceDimension,
 			final boolean probabilityMaps ) {
+
 		final List< RandomAccessibleInterval< T > > rais = new ArrayList< RandomAccessibleInterval< T > >();
 		for ( long i = img.min( sliceDimension ); i <= img.max( sliceDimension ); i++ ) {
 			rais.add( Views.hyperSlice( img, sliceDimension, i ) );
