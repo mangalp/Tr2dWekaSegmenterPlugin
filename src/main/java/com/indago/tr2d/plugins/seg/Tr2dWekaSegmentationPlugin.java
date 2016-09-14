@@ -3,6 +3,7 @@
  */
 package com.indago.tr2d.plugins.seg;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.JPanel;
@@ -60,7 +61,13 @@ public class Tr2dWekaSegmentationPlugin implements Tr2dSegmentationPlugin {
 	 */
 	@Override
 	public List< RandomAccessibleInterval< IntType > > getOutputs() {
-		return model.getSumImages();
+		final List< RandomAccessibleInterval< IntType > >  ret = new ArrayList<>();
+		for ( final RandomAccessibleInterval< IntType > elem : model.getSumImages() ) {
+			if ( elem != null ) { // in case some added classifiers have never been used to predict anything
+				ret.add( elem );
+			}
+		}
+		return ret;
 	}
 
 	/**

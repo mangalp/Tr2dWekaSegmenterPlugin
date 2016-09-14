@@ -130,7 +130,6 @@ public class Tr2dWekaSegmentationModel implements BdvOwner {
 		// Try to load classification and sum images corresponding to given classifiers
 		int i = 0;
 		for ( final ProjectFile pfClassifier : vecClassifierFiles ) {
-			i++;
 			try {
 				final File file = new File( projectFolder.getFolder(), FILENAME_PREFIX_CLASSIFICATION_IMGS + i + ".tif" );
 				if ( file.canRead() ) {
@@ -140,6 +139,10 @@ public class Tr2dWekaSegmentationModel implements BdvOwner {
     				final RandomAccessibleInterval< IntType > sumimg =
     						IntTypeImgLoader.loadTiffEnsureType( new File( projectFolder.getFolder(), FILENAME_PREFIX_SUM_IMGS + i + ".tif" ) );
 					mapSegmentHypotheses.put( pfClassifier, sumimg );
+				} else {
+					Tr2dWekaSegmentationPlugin.log.warn(
+							"No segmentation results found for classifier '" + pfClassifier
+									.getFilename() + "'. Start segmentation for it if you want to use its output for tracking." );
 				}
 			} catch ( final ImgIOException e ) {
 				JOptionPane.showMessageDialog(
@@ -149,6 +152,7 @@ public class Tr2dWekaSegmentationModel implements BdvOwner {
 						JOptionPane.ERROR_MESSAGE );
 				e.printStackTrace();
 			}
+			i++;
 		}
 	}
 
@@ -211,42 +215,52 @@ public class Tr2dWekaSegmentationModel implements BdvOwner {
 	/**
 	 * Performs the segmentation procedure previously set up.
 	 */
-	public void segment() {
-		mapClassification.clear();
-		mapSegmentHypotheses.clear();
+	public void segmentSelected( final int[] indices ) {
+		for ( final int idx : indices ) {
+			final ProjectFile pfClassifier = vecClassifierFiles.get( idx );
 
-		int i = 0;
-		for ( final ProjectFile pfClassifier : vecClassifierFiles ) {
-			i++;
 			Tr2dWekaSegmentationPlugin.log
-					.trace( String.format( "Classifier %d of %d -- %s", i, vecClassifierFiles.size(), pfClassifier.getFilename() ) );
+					.trace( String.format( "Classifier %d of %d -- %s", idx, vecClassifierFiles.size(), pfClassifier.getFilename() ) );
 
 			if ( !pfClassifier.canRead() )
 				Tr2dWekaSegmentationPlugin.log.error( String.format( "Given classifier file cannot be read (%s)", pfClassifier.getAbsolutePath() ) );
 			activateClassifier( pfClassifier );
 
-    		// classify frames
+			// classify frames
 			final RandomAccessibleInterval< DoubleType > classification =
 					SegmentationMagic.returnClassification( getModel().getModel().getRawData() );
 			mapClassification.put( pfClassifier, classification );
-			IJ.save( ImageJFunctions.wrap( classification, "classification image" ).duplicate(),
-					 new File( projectFolder.getFolder(), FILENAME_PREFIX_CLASSIFICATION_IMGS + i + ".tif" ).getAbsolutePath() );
+			IJ.save(
+					ImageJFunctions.wrap( classification, "classification image" ).duplicate(),
+					new File( projectFolder.getFolder(), FILENAME_PREFIX_CLASSIFICATION_IMGS + idx + ".tif" ).getAbsolutePath() );
 
 			// collect thresholds into SumImage
 			RandomAccessibleInterval< IntType > imgTemp;
 			final Img< IntType > sumimg = DataMover.createEmptyArrayImgLike( classification, new IntType() );
 			mapSegmentHypotheses.put( pfClassifier, sumimg );
 
-			for ( final Double d : getListThresholds( i - 1 ) ) {
-    			imgTemp = Converters.convert(
+			for ( final Double d : getListThresholds( idx ) ) {
+				imgTemp = Converters.convert(
 						classification,
-    					new IntTypeThresholdConverter( d ),
+						new IntTypeThresholdConverter( d ),
 						new IntType() );
 				DataMover.add( imgTemp, ( IterableInterval ) sumimg );
-    		}
-			IJ.save( ImageJFunctions.wrap( sumimg, "sum image" ).duplicate(),
-					 new File( projectFolder.getFolder(), FILENAME_PREFIX_SUM_IMGS + i + ".tif" ).getAbsolutePath() );
+			}
+			IJ.save(
+					ImageJFunctions.wrap( sumimg, "sum image" ).duplicate(),
+					new File( projectFolder.getFolder(), FILENAME_PREFIX_SUM_IMGS + idx + ".tif" ).getAbsolutePath() );
 		}
+	}
+
+	/**
+	 * Performs the segmentation procedure previously set up.
+	 */
+	public void segment() {
+		final int[] indices = new int[ vecClassifierFiles.size() ];
+		for ( int i = 0; i < indices.length; i++ ) {
+			indices[ i ] = i;
+		}
+		segmentSelected( indices );
 	}
 
 	/**
@@ -331,7 +345,7 @@ public class Tr2dWekaSegmentationModel implements BdvOwner {
 	@Override
 	public < T extends RealType< T > & NativeType< T > > BdvSource bdvGetSourceFor( final RandomAccessibleInterval< T > img ) {
 		final int idx = getSumImages().indexOf( img );
-		if ( idx == -1 ) return null;
+		if ( idx == -1 || getSumImages().get( idx ) == null ) return null;
 		return bdvGetSources().get( idx );
 	}
 

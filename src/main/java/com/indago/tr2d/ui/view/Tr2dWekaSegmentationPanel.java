@@ -10,10 +10,12 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 
+import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JPanel;
+import javax.swing.JSplitPane;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
@@ -56,30 +58,32 @@ public class Tr2dWekaSegmentationPanel extends JPanel implements ActionListener,
 	 */
 	private void buildGui() {
 
-		final MigLayout layout = new MigLayout( "", "[grow]", "" );
+		final MigLayout layout = new MigLayout( "fill", "[grow]", "" );
 		final JPanel controls = new JPanel( layout );
 
 		final JPanel list = new JPanel( new BorderLayout() );
 		listClassifiers.addListSelectionListener( this );
 		list.add( listClassifiers, BorderLayout.CENTER );
+		list.setBorder( BorderFactory.createTitledBorder( "Fiji Trainable Weka Segmentation models" ) );
 		JPanel helper = new JPanel( new FlowLayout( FlowLayout.RIGHT ) );
 		bAdd.addActionListener( this );
 		bRemove.addActionListener( this );
 		helper.add( bAdd );
 		helper.add( bRemove );
 		list.add( helper, BorderLayout.SOUTH );
-		controls.add( list, "growx, wrap" );
+		controls.add( list, "h 100%, grow, wrap" );
 
 		helper = new JPanel( new BorderLayout() );
 		lblThresholds = new JLabel( "thresholds: " );
 		txtThresholds = new JDoubleListTextPane();
+		txtThresholds.setEnabled( false );
 		helper.add( lblThresholds, BorderLayout.WEST );
 		helper.add( txtThresholds, BorderLayout.CENTER );
-		controls.add( helper, "growx, growy, wrap" );
+		controls.add( helper, "growx, wrap" );
 
-		bStartSegmentation = new JButton( "segment" );
+		bStartSegmentation = new JButton( "start selected classifiers" );
 		bStartSegmentation.addActionListener( this );
-		controls.add( bStartSegmentation, "growx, wrap" );
+		controls.add( bStartSegmentation, "growx, gapy 5 0, wrap" );
 
 		final BdvHandlePanel bdv = new BdvHandlePanel( ( Frame ) this.getTopLevelAncestor(), Bdv
 				.options()
@@ -87,8 +91,9 @@ public class Tr2dWekaSegmentationPanel extends JPanel implements ActionListener,
 				.inputTriggerConfig( model.getModel().getModel().getDefaultInputTriggerConfig() ) );
 		model.bdvSetHandlePanel( bdv );
 
-		this.add( controls, BorderLayout.WEST );
-		this.add( model.bdvGetHandlePanel().getViewerPanel(), BorderLayout.CENTER );
+		final JSplitPane splitPane = new JSplitPane( JSplitPane.HORIZONTAL_SPLIT, controls, model.bdvGetHandlePanel().getViewerPanel() );
+		splitPane.setResizeWeight( 0.1 ); // 1.0 == extra space given to left component alone!
+		this.add( splitPane, BorderLayout.CENTER );
 	}
 
 	/**
@@ -154,7 +159,7 @@ public class Tr2dWekaSegmentationPanel extends JPanel implements ActionListener,
 		if ( listClassifiers.getSelectedIndex() != -1 ) { // update latest edits of text field that might have occured
 			model.setListThresholds( listClassifiers.getSelectedIndex(), txtThresholds.getList() );
 		}
-		model.segment();
+		model.segmentSelected( listClassifiers.getSelectedIndices() );
 
 		updateViewGivenSelection();
 	}
@@ -168,7 +173,7 @@ public class Tr2dWekaSegmentationPanel extends JPanel implements ActionListener,
 					txtThresholds.setList( model.getListThresholds( idx ) );
 					txtThresholds.setEnabled( true );
 				}
-				if ( model.getSumImages().size() > idx ) {
+				if ( model.getSumImages().size() > idx && model.getSumImages().get( idx ) != null ) {
 					model.bdvAdd(
 							model.getSumImages().get( idx ),
 							listClassifiers.getModel().getElementAt( idx ) );
