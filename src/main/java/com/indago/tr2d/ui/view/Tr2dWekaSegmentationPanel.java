@@ -17,15 +17,12 @@ import javax.swing.JPanel;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
-import com.indago.io.ProjectFile;
 import com.indago.tr2d.ui.model.Tr2dWekaSegmentationModel;
 import com.indago.tr2d.ui.util.JDoubleListTextPane;
 import com.indago.tr2d.ui.util.UniversalFileChooser;
 
 import bdv.util.Bdv;
 import bdv.util.BdvHandlePanel;
-import net.imglib2.RandomAccessibleInterval;
-import net.imglib2.type.numeric.integer.IntType;
 import net.miginfocom.swing.MigLayout;
 import weka.gui.ExtensionFileFilter;
 
@@ -58,16 +55,6 @@ public class Tr2dWekaSegmentationPanel extends JPanel implements ActionListener,
 	 * Builds the GUI of this panel.
 	 */
 	private void buildGui() {
-
-//		lblClassifier = new JLabel( "classifier: " );
-//		txtClassifierPath = new JTextPane();
-//		String fn = "";
-//		try {
-//			fn = model.getClassifierFilenames().get( 0 );
-//		} catch ( final IndexOutOfBoundsException e ) {}
-//		txtClassifierPath.setText( fn );
-//		bOpenClassifier = new JButton( "pick classifier" );
-//		bOpenClassifier.addActionListener( this );
 
 		final MigLayout layout = new MigLayout( "", "[grow]", "" );
 		final JPanel controls = new JPanel( layout );
@@ -143,14 +130,15 @@ public class Tr2dWekaSegmentationPanel extends JPanel implements ActionListener,
 		if ( listClassifiers.getSelectedIndices().length > 0 ) {
 			int removedSoFar = 0;
 			for ( final int idx : listClassifiers.getSelectedIndices() ) {
-				listClassifiers.remove( idx - removedSoFar );
-				removedSoFar++;
 				model.removeClassifierAndData( idx - removedSoFar );
+				removedSoFar++;
 			}
 		}
+		model.saveStateToFile();
 		if ( listClassifiers.getModel().getSize() > 0 ) {
 			listClassifiers.setSelectedIndex( 0 );
 		} else {
+			listClassifiers.clearSelection();
 			model.bdvRemoveAll();
 		}
 	}
@@ -160,16 +148,34 @@ public class Tr2dWekaSegmentationPanel extends JPanel implements ActionListener,
 	 */
 	private void actionStartSegmentaion() {
 
-		if ( listClassifiers.getSelectedIndex() != -1 ) {
+		model.bdvRemoveAll();
+
+		// START SEGMENTATION
+		if ( listClassifiers.getSelectedIndex() != -1 ) { // update latest edits of text field that might have occured
 			model.setListThresholds( listClassifiers.getSelectedIndex(), txtThresholds.getList() );
 		}
 		model.segment();
 
-		int i = 0;
-		for( final ProjectFile classifier : model.getClassifiers() ) {
-			final RandomAccessibleInterval< IntType > seghyps = model.getSumImages().get( i );
-			model.bdvAdd( seghyps, "result of " + classifier.getFilename() );
-    		i++;
+		updateViewGivenSelection();
+	}
+
+	private void updateViewGivenSelection() {
+		if ( listClassifiers.getSelectedIndices().length > 0 ) {
+			for ( final int idx : listClassifiers.getSelectedIndices() ) {
+				if ( listClassifiers.getSelectedIndices().length > 1 ) {
+					txtThresholds.setEnabled( false );
+				} else {
+					txtThresholds.setList( model.getListThresholds( idx ) );
+					txtThresholds.setEnabled( true );
+				}
+				if ( model.getSumImages().size() > idx ) {
+					model.bdvAdd(
+							model.getSumImages().get( idx ),
+							listClassifiers.getModel().getElementAt( idx ) );
+				}
+			}
+		} else {
+			model.bdvRemoveAll();
 		}
 	}
 
@@ -181,23 +187,7 @@ public class Tr2dWekaSegmentationPanel extends JPanel implements ActionListener,
 		if ( e.getValueIsAdjusting() == false ) {
 
 			model.bdvRemoveAll();
-			if ( listClassifiers.getSelectedIndices().length > 0 ) {
-				for ( final int idx : listClassifiers.getSelectedIndices() ) {
-					if ( listClassifiers.getSelectedIndices().length > 1 ) {
-						txtThresholds.setEnabled( false );
-					} else {
-						txtThresholds.setList( model.getListThresholds( idx ) );
-						txtThresholds.setEnabled( true );
-					}
-					if ( model.getSumImages().size() > idx ) {
-						model.bdvAdd(
-								model.getSumImages().get( idx ),
-								listClassifiers.getModel().getElementAt( idx ) );
-					}
-				}
-			} else {
-				model.bdvRemoveAll();
-			}
+			updateViewGivenSelection();
 		}
 	}
 }

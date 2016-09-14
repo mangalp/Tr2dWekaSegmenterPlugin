@@ -9,6 +9,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -65,7 +66,7 @@ public class Tr2dWekaSegmentationModel implements BdvOwner {
 
 	private final LinkedListModel< String > linkedListModel = new LinkedListModel<>();
 
-	private final Map< ProjectFile, RandomAccessibleInterval< DoubleType > > imgsClassification = new HashMap<>();
+	private final Map< ProjectFile, RandomAccessibleInterval< DoubleType > > mapClassification = new HashMap<>();
 	private final Map< ProjectFile, RandomAccessibleInterval< IntType > > mapSegmentHypotheses = new HashMap<>();
 
 	private BdvHandlePanel bdvHandlePanel;
@@ -133,7 +134,7 @@ public class Tr2dWekaSegmentationModel implements BdvOwner {
 			try {
 				final File file = new File( projectFolder.getFolder(), FILENAME_PREFIX_CLASSIFICATION_IMGS + i + ".tif" );
 				if ( file.canRead() ) {
-					imgsClassification.put(
+					mapClassification.put(
 							pfClassifier,
     						DoubleTypeImgLoader.loadTiff( file ) );
     				final RandomAccessibleInterval< IntType > sumimg =
@@ -154,7 +155,7 @@ public class Tr2dWekaSegmentationModel implements BdvOwner {
 	/**
 	 *
 	 */
-	private void saveStateToFile() {
+	public void saveStateToFile() {
 		try {
 			final FileWriter writer = new FileWriter( new File( projectFolder.getFolder(), FILENAME_STATE ) );
 
@@ -211,12 +212,8 @@ public class Tr2dWekaSegmentationModel implements BdvOwner {
 	 * Performs the segmentation procedure previously set up.
 	 */
 	public void segment() {
-		imgsClassification.clear();
+		mapClassification.clear();
 		mapSegmentHypotheses.clear();
-		for ( final BdvSource bdvSource : bdvSources ) {
-			bdvSource.removeFromBdv();
-		}
-		bdvSources.clear();
 
 		int i = 0;
 		for ( final ProjectFile pfClassifier : vecClassifierFiles ) {
@@ -231,7 +228,7 @@ public class Tr2dWekaSegmentationModel implements BdvOwner {
     		// classify frames
 			final RandomAccessibleInterval< DoubleType > classification =
 					SegmentationMagic.returnClassification( getModel().getModel().getRawData() );
-			imgsClassification.put( pfClassifier, classification );
+			mapClassification.put( pfClassifier, classification );
 			IJ.save( ImageJFunctions.wrap( classification, "classification image" ).duplicate(),
 					 new File( projectFolder.getFolder(), FILENAME_PREFIX_CLASSIFICATION_IMGS + i + ".tif" ).getAbsolutePath() );
 
@@ -259,7 +256,7 @@ public class Tr2dWekaSegmentationModel implements BdvOwner {
 	public List< RandomAccessibleInterval< DoubleType > > getClassifications() {
 		final List< RandomAccessibleInterval< DoubleType > > ret = new ArrayList<>();
 		for ( final ProjectFile pfClassifier : vecClassifierFiles ) {
-			ret.add( imgsClassification.get( pfClassifier ) );
+			ret.add( mapClassification.get( pfClassifier ) );
 		}
 		return ret;
 	}
@@ -360,6 +357,15 @@ public class Tr2dWekaSegmentationModel implements BdvOwner {
 		try {
 			Files.copy( f.toPath(), pf.getFile().toPath() );
 			addClassifier( pf );
+		} catch ( final FileAlreadyExistsException faee ) {
+			projectFolder.removeFile( pf );
+			final String msg = "A classifier file with this name was already added to the segmenter!";
+			Tr2dWekaSegmentationPlugin.log.error( msg, faee );
+			JOptionPane.showMessageDialog(
+					Tr2dContext.guiFrame,
+					"A classifier file with this name was already added to the segmenter!\n" + faee.getMessage(),
+					"Already added...",
+					JOptionPane.ERROR_MESSAGE );
 		} catch ( final IOException e ) {
 			projectFolder.removeFile( pf );
 			Tr2dWekaSegmentationPlugin.log.error( "Classifier could not be moved to project folder!", e );
@@ -370,6 +376,7 @@ public class Tr2dWekaSegmentationModel implements BdvOwner {
 	 * @param i
 	 */
 	public void removeClassifierAndData( final int idx ) {
+		linkedListModel.remove( idx );
 		final ProjectFile toDelete = vecClassifierFiles.remove( idx );
 		toDelete.getFile().delete();
 		vecThresholds.remove( idx );
@@ -381,9 +388,9 @@ public class Tr2dWekaSegmentationModel implements BdvOwner {
 	 *
 	 */
 	private void deleteAllSavedImageFiles() {
-		final String[] listOfFiles = projectFolder.getFolder().list( new ExtensionFileFilter( ".tif", "TIFF Files" ) );
+		final String[] listOfFiles = projectFolder.getFolder().list( new ExtensionFileFilter( "tif", "tif" ) );
 		for ( final String filename : listOfFiles ) {
-			final File f = new File( filename );
+			final File f = new File( projectFolder.getFolder(), filename );
 			f.delete();
 		}
 	}
@@ -392,7 +399,20 @@ public class Tr2dWekaSegmentationModel implements BdvOwner {
 	 *
 	 */
 	private void saveAllImageFiles() {
-		// TODO Auto-generated method stub
+		Tr2dWekaSegmentationPlugin.log.trace( "(Re-)saving image data..." );
+		int i = 0;
+		for ( final ProjectFile pfClassifier : vecClassifierFiles ) {
+			i++;
 
+			final RandomAccessibleInterval< DoubleType > classification = mapClassification.get( pfClassifier );
+			IJ.save(
+					ImageJFunctions.wrap( classification, "classification image" ).duplicate(),
+					new File( projectFolder.getFolder(), FILENAME_PREFIX_CLASSIFICATION_IMGS + i + ".tif" ).getAbsolutePath() );
+
+			final RandomAccessibleInterval< IntType > sumimg = mapSegmentHypotheses.get( pfClassifier );
+			IJ.save(
+					ImageJFunctions.wrap( sumimg, "sum image" ).duplicate(),
+					new File( projectFolder.getFolder(), FILENAME_PREFIX_SUM_IMGS + i + ".tif" ).getAbsolutePath() );
+		}
 	}
 }
