@@ -26,7 +26,6 @@ import com.indago.io.DoubleTypeImgLoader;
 import com.indago.io.IntTypeImgLoader;
 import com.indago.io.ProjectFile;
 import com.indago.io.ProjectFolder;
-import com.indago.tr2d.Tr2dContext;
 import com.indago.tr2d.plugins.seg.Tr2dWekaSegmentationPlugin;
 import com.indago.ui.bdv.BdvOwner;
 import com.indago.util.converter.IntTypeThresholdConverter;
@@ -37,7 +36,6 @@ import com.univocity.parsers.csv.CsvParserSettings;
 import bdv.util.BdvHandlePanel;
 import bdv.util.BdvSource;
 import ij.IJ;
-import io.scif.img.ImgIOException;
 import net.imglib2.IterableInterval;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.converter.Converters;
@@ -130,27 +128,18 @@ public class Tr2dWekaSegmentationModel implements BdvOwner {
 		// Try to load classification and sum images corresponding to given classifiers
 		int i = 0;
 		for ( final ProjectFile pfClassifier : vecClassifierFiles ) {
-			try {
-				final File file = new File( projectFolder.getFolder(), FILENAME_PREFIX_CLASSIFICATION_IMGS + i + ".tif" );
-				if ( file.canRead() ) {
-					mapClassification.put(
-							pfClassifier,
-    						DoubleTypeImgLoader.loadTiff( file ) );
-    				final RandomAccessibleInterval< IntType > sumimg =
-    						IntTypeImgLoader.loadTiffEnsureType( new File( projectFolder.getFolder(), FILENAME_PREFIX_SUM_IMGS + i + ".tif" ) );
-					mapSegmentHypotheses.put( pfClassifier, sumimg );
-				} else {
-					Tr2dWekaSegmentationPlugin.log.warn(
-							"No segmentation results found for classifier '" + pfClassifier
-									.getFilename() + "'. Start segmentation for it if you want to use its output for tracking." );
-				}
-			} catch ( final ImgIOException e ) {
-				JOptionPane.showMessageDialog(
-						Tr2dContext.guiFrame,
-						"Weka Segmentation Results could not be loaded from project folder.\n> " + e.getMessage(),
-						"Problem loading from project...",
-						JOptionPane.ERROR_MESSAGE );
-				e.printStackTrace();
+			final File file = new File( projectFolder.getFolder(), FILENAME_PREFIX_CLASSIFICATION_IMGS + i + ".tif" );
+			if ( file.canRead() ) {
+				mapClassification.put(
+						pfClassifier,
+						DoubleTypeImgLoader.loadTiff( file ) );
+				final RandomAccessibleInterval< IntType > sumimg =
+						IntTypeImgLoader.loadTiffEnsureType( new File( projectFolder.getFolder(), FILENAME_PREFIX_SUM_IMGS + i + ".tif" ) );
+				mapSegmentHypotheses.put( pfClassifier, sumimg );
+			} else {
+				Tr2dWekaSegmentationPlugin.log.warn(
+						"No segmentation results found for classifier '" + pfClassifier
+								.getFilename() + "'. Start segmentation for it if you want to use its output for tracking." );
 			}
 			i++;
 		}
@@ -376,7 +365,7 @@ public class Tr2dWekaSegmentationModel implements BdvOwner {
 			final String msg = "A classifier file with this name was already added to the segmenter!";
 			Tr2dWekaSegmentationPlugin.log.error( msg, faee );
 			JOptionPane.showMessageDialog(
-					Tr2dContext.guiFrame,
+					null, //Tr2dContext.guiFrame,
 					"A classifier file with this name was already added to the segmenter!\n" + faee.getMessage(),
 					"Already added...",
 					JOptionPane.ERROR_MESSAGE );
