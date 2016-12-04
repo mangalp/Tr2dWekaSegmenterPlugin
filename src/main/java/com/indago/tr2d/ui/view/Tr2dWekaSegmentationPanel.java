@@ -106,7 +106,9 @@ public class Tr2dWekaSegmentationPanel extends JPanel implements ActionListener,
 		} else if ( e.getSource().equals( bRemove ) ) {
 			actionRemoveClassifierData();
 		} else if ( e.getSource().equals( bStartSegmentation ) ) {
-			actionStartSegmentaion();
+			new Thread( () -> {
+				actionStartSegmentaion();
+			} ).start();
 		}
 	}
 
