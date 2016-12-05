@@ -2,10 +2,10 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
- 	<parent>
+	<parent>
 		<groupId>sc.fiji</groupId>
-		<artifactId>pom-fiji</artifactId>
-		<version>26.1.1</version>
+		<artifactId>pom-indago</artifactId>
+		<version>1.0.0</version>
 	</parent>
  
  	<properties>
@@ -30,47 +30,38 @@
 		<dependency>
 			<groupId>com.indago</groupId>
 			<artifactId>IndagoLoggingWrapper</artifactId>
-			<version>0.1.0-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>com.indago</groupId>
 			<artifactId>Indago</artifactId>
-			<version>0.1.1-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>sc.fiji</groupId>
 			<artifactId>bigdataviewer-vistools</artifactId>
-			<version>1.0.0-beta-3</version>
 		</dependency>
 		<dependency>
 			<groupId>sc.fiji</groupId>
 			<artifactId>bigdataviewer-core</artifactId>
-			<version>2.4.1-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>sc.fiji</groupId>
 			<artifactId>Trainable_Segmentation</artifactId>
-			<version>3.2.1</version> <!-- for some reason Java8 update site comes with 3.2.1 (2016-10-22) -->
 		</dependency>
   		<dependency> <!-- needed dependency for trainable weka (dunno why this is not resolved automatically) --> 
 			<groupId>sc.fiji</groupId>
 			<artifactId>imagescience</artifactId>
-			<version>3.0.0</version>
 		</dependency>
 		<dependency>
 			<groupId>com.miglayout</groupId>
 			<artifactId>miglayout</artifactId>
-			<version>3.7.4</version>
 		</dependency>
  		<dependency>
 			<groupId>com.jgoodies</groupId>
 			<artifactId>jgoodies-common</artifactId>
-			<version>1.7.0</version>
 		</dependency>
 		<dependency>
     		<groupId>com.univocity</groupId>
     		<artifactId>univocity-parsers</artifactId>
-    		<version>2.0.2</version>
     		<type>jar</type>
 		</dependency>
 	</dependencies>
