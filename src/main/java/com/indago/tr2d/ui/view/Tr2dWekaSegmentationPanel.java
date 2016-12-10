@@ -157,13 +157,22 @@ public class Tr2dWekaSegmentationPanel extends JPanel implements ActionListener,
 
 		model.bdvRemoveAll();
 
-		// START SEGMENTATION
-		if ( listClassifiers.getSelectedIndex() != -1 ) { // update latest edits of text field that might have occured
-			model.setListThresholds( listClassifiers.getSelectedIndex(), txtThresholds.getList() );
-		}
-		model.segmentSelected( listClassifiers.getSelectedIndices() );
+		final Runnable runnable = new Runnable() {
 
-		updateViewGivenSelection();
+			@Override
+			public void run() {
+				// START SEGMENTATION
+				if ( listClassifiers.getSelectedIndex() != -1 ) { // update latest edits of text field that might have occured
+					model.setListThresholds( listClassifiers.getSelectedIndex(), txtThresholds.getList() );
+				}
+				model.segmentSelected( listClassifiers.getSelectedIndices() );
+
+				updateViewGivenSelection();
+			}
+
+		};
+		final Thread t = new Thread( runnable );
+		t.start();
 	}
 
 	private void updateViewGivenSelection() {

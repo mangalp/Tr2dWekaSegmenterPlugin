@@ -133,6 +133,7 @@ public class Tr2dWekaSegmentationModel implements BdvOwner {
 				mapClassification.put(
 						pfClassifier,
 						DoubleTypeImgLoader.loadTiff( file ) );
+				System.out.println( "loaded " + pfClassifier );
 				final RandomAccessibleInterval< IntType > sumimg =
 						IntTypeImgLoader.loadTiffEnsureType( new File( projectFolder.getFolder(), FILENAME_PREFIX_SUM_IMGS + i + ".tif" ) );
 				mapSegmentHypotheses.put( pfClassifier, sumimg );
@@ -215,13 +216,17 @@ public class Tr2dWekaSegmentationModel implements BdvOwner {
 				Tr2dWekaSegmentationPlugin.log.error( String.format( "Given classifier file cannot be read (%s)", pfClassifier.getAbsolutePath() ) );
 			activateClassifier( pfClassifier );
 
-			// classify frames
-			final RandomAccessibleInterval< DoubleType > classification =
-					SegmentationMagic.returnClassification( getModel().getModel().getRawData() );
-			mapClassification.put( pfClassifier, classification );
-			IJ.save(
-					ImageJFunctions.wrap( classification, "classification image" ).duplicate(),
-					new File( projectFolder.getFolder(), FILENAME_PREFIX_CLASSIFICATION_IMGS + idx + ".tif" ).getAbsolutePath() );
+			// classify frames (if needed)
+			RandomAccessibleInterval< DoubleType > classification = mapClassification.get( pfClassifier );
+			if ( classification == null ) {
+				System.out.println( "need to segment for " + pfClassifier );
+				classification =
+						SegmentationMagic.returnClassification( getModel().getModel().getRawData() );
+				mapClassification.put( pfClassifier, classification );
+				IJ.save(
+						ImageJFunctions.wrap( classification, "classification image" ).duplicate(),
+						new File( projectFolder.getFolder(), FILENAME_PREFIX_CLASSIFICATION_IMGS + idx + ".tif" ).getAbsolutePath() );
+			}
 
 			// collect thresholds into SumImage
 			RandomAccessibleInterval< IntType > imgTemp;
