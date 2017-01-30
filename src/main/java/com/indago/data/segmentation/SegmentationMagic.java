@@ -3,9 +3,13 @@
  */
 package com.indago.data.segmentation;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.indago.fkt.Constant1D;
 import com.indago.fkt.Function1D;
 
+import indago.ui.progress.ProgressListener;
 import net.imglib2.Cursor;
 import net.imglib2.RandomAccess;
 import net.imglib2.RandomAccessibleInterval;
@@ -46,9 +50,29 @@ public class SegmentationMagic {
 		return wekaClassifier;
 	}
 
-	public static RandomAccessibleInterval< DoubleType > returnClassification( final RandomAccessibleInterval< DoubleType > rai ) {
+	/**
+	 * @param rai
+	 *            the image to de segmented
+	 * @return
+	 */
+	public static RandomAccessibleInterval< DoubleType > returnClassification(
+			final RandomAccessibleInterval< DoubleType > rai ) {
+		return returnClassification( rai, new ArrayList<>() );
+	}
+
+	/**
+	 * @param rai
+	 *            the image to de segmented
+	 * @param progressListeners
+	 *            a list of progess listeners. Please do not hand
+	 *            <code>null</code>. An empty list is fine.
+	 * @return
+	 */
+	public static RandomAccessibleInterval< DoubleType > returnClassification(
+			final RandomAccessibleInterval< DoubleType > rai,
+			final List< ProgressListener > progressListeners ) {
 //		lastClassified = wekaClassifier.classifyPixels( rai, true );
-		lastClassified = wekaClassifier.classifyPixelSlicesInThreads( rai, 2, true );
+		lastClassified = wekaClassifier.classifyPixelSlicesInThreads( rai, 2, true, progressListeners );
 
 		final long[] min = new long[ lastClassified.numDimensions() ];
 		lastClassified.min( min );
@@ -60,7 +84,7 @@ public class SegmentationMagic {
 			max[ 2 ]++;
 		}
 
-		final SubsampleIntervalView< DoubleType > subsampleGapClass = ( SubsampleIntervalView< DoubleType > ) Views.subsample( Views.interval( lastClassified, min, max ), 1, 1, 2 );
+		final SubsampleIntervalView< DoubleType > subsampleGapClass = Views.subsample( Views.interval( lastClassified, min, max ), 1, 1, 2 );
 
 		return subsampleGapClass;
 	}

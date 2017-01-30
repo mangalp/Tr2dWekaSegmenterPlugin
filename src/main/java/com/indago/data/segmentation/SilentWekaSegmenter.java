@@ -11,6 +11,7 @@ import com.indago.tr2d.plugins.seg.Tr2dWekaSegmentationPlugin;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.Prefs;
+import indago.ui.progress.ProgressListener;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.converter.Converters;
 import net.imglib2.converter.RealDoubleConverter;
@@ -54,23 +55,27 @@ public class SilentWekaSegmenter< T extends NumericType< T > > {
 		return true;
 	}
 
-	public RandomAccessibleInterval< DoubleType > classifyPixels( final RandomAccessibleInterval< T > img, final boolean probabilityMaps ) {
+	public RandomAccessibleInterval< DoubleType > classifyPixels(
+			final RandomAccessibleInterval< T > img,
+			final boolean probabilityMaps,
+			final List< ProgressListener > progressListeners ) {
 		final List< RandomAccessibleInterval< T >> rais = new ArrayList< RandomAccessibleInterval< T >>();
 		rais.add( img );
-		final List< RandomAccessibleInterval< DoubleType > > result = classifyPixels( rais, probabilityMaps );
+		final List< RandomAccessibleInterval< DoubleType > > result = classifyPixels( rais, probabilityMaps, progressListeners );
 		return result.get( 0 );
 	}
 
 	public RandomAccessibleInterval< DoubleType > classifyPixelSlicesInThreads(
 			final RandomAccessibleInterval< T > img,
 			final int sliceDimension,
-			final boolean probabilityMaps ) {
+			final boolean probabilityMaps,
+			final List< ProgressListener > progressListeners ) {
 
 		final List< RandomAccessibleInterval< T > > rais = new ArrayList< RandomAccessibleInterval< T > >();
 		for ( long i = img.min( sliceDimension ); i <= img.max( sliceDimension ); i++ ) {
 			rais.add( Views.hyperSlice( img, sliceDimension, i ) );
 		}
-		final List< RandomAccessibleInterval< DoubleType > > slices3d = classifyPixels( rais, probabilityMaps );
+		final List< RandomAccessibleInterval< DoubleType > > slices3d = classifyPixels( rais, probabilityMaps, progressListeners );
 		final List< RandomAccessibleInterval< DoubleType > > slices = new ArrayList< >();
 		for ( int i = 0; i < slices3d.size(); i++ ) {
 			slices.add( Views.hyperSlice( slices3d.get( i ), 2, 0 ) );
@@ -79,7 +84,10 @@ public class SilentWekaSegmenter< T extends NumericType< T > > {
 		return Views.stack( slices );
 	}
 
-	public List< RandomAccessibleInterval< DoubleType >> classifyPixels( final List< RandomAccessibleInterval< T >> raiList, final boolean probabilityMaps ) {
+	public List< RandomAccessibleInterval< DoubleType > > classifyPixels(
+			final List< RandomAccessibleInterval< T > > raiList,
+			final boolean probabilityMaps,
+			final List< ProgressListener > progressListeners ) {
 
 		final List< RandomAccessibleInterval< DoubleType >> results = new ArrayList< RandomAccessibleInterval< DoubleType >>();
 		for ( int i = 0; i < raiList.size(); ++i )
@@ -89,7 +97,11 @@ public class SilentWekaSegmenter< T extends NumericType< T > > {
 		final int numThreads = Math.min( raiList.size(), numProcessors );
 		final int numFurtherThreads = ( int ) Math.ceil( ( double ) ( numProcessors - numThreads ) / raiList.size() ) + 1;
 
-		Tr2dWekaSegmentationPlugin.log.info( "Processing " + raiList.size() + " image files in " + numThreads + " thread(s)...." );
+		final String message = "Processing " + raiList.size() + " image files in " + numThreads + " thread(s)....";
+		Tr2dWekaSegmentationPlugin.log.info( message );
+		for ( final ProgressListener pl : progressListeners ) {
+			pl.resetProgress( message, raiList.size() );
+		}
 
 		final Thread[] threads = new Thread[ numThreads ];
 
@@ -113,7 +125,6 @@ public class SilentWekaSegmenter< T extends NumericType< T > > {
 				for ( int i = numThread; i < raiList.size(); i += numThreads ) {
 
 					final ImagePlus forWekaImagePlus = ImageJFunctions.wrap( raiList.get( i ), "Img_num_" + i ).duplicate();
-					Tr2dWekaSegmentationPlugin.log.info( "Processing image " + ( i + 1 ) + " in thread " + ( numThread + 1 ) );
 
 					final ImagePlus segmentation = wekaSegmentation.applyClassifier( forWekaImagePlus, numFurtherThreads, probabilityMaps );
 
@@ -128,6 +139,11 @@ public class SilentWekaSegmenter< T extends NumericType< T > > {
 						raiListOutputs.set( i, rai );
 					} else {
 						Tr2dWekaSegmentationPlugin.log.warn( "One of the input images could not be classified!!!" );
+					}
+
+					Tr2dWekaSegmentationPlugin.log.info( "Processed image " + ( i + 1 ) + " in thread " + ( numThread + 1 ) );
+					for ( final ProgressListener pl : progressListeners ) {
+						pl.hasProgressed();
 					}
 
 					segmentation.close();

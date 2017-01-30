@@ -25,6 +25,7 @@ import com.indago.tr2d.ui.util.UniversalFileChooser;
 
 import bdv.util.Bdv;
 import bdv.util.BdvHandlePanel;
+import indago.ui.progress.DialogProgress;
 import net.miginfocom.swing.MigLayout;
 import weka.gui.ExtensionFileFilter;
 
@@ -45,6 +46,8 @@ public class Tr2dWekaSegmentationPanel extends JPanel implements ActionListener,
 	private JDoubleListTextPane txtThresholds;
 
 	private JButton bStartSegmentation;
+
+	private DialogProgress trackingProgressDialog = null;
 
 	public Tr2dWekaSegmentationPanel( final Tr2dWekaSegmentationModel model ) {
 		super( new BorderLayout() );
@@ -106,6 +109,13 @@ public class Tr2dWekaSegmentationPanel extends JPanel implements ActionListener,
 		} else if ( e.getSource().equals( bRemove ) ) {
 			actionRemoveClassifierData();
 		} else if ( e.getSource().equals( bStartSegmentation ) ) {
+			if ( trackingProgressDialog == null ) {
+				trackingProgressDialog = new DialogProgress( this, "Starting segmentation...", 10 );
+				model.addProgressListener( trackingProgressDialog );
+			} else {
+				model.fireNextProgressPhaseEvent( "Starting segmentation...", 10 );
+			}
+
 			new Thread( () -> {
 				actionStartSegmentaion();
 			} ).start();
@@ -157,22 +167,15 @@ public class Tr2dWekaSegmentationPanel extends JPanel implements ActionListener,
 
 		model.bdvRemoveAll();
 
-		final Runnable runnable = new Runnable() {
+		// START SEGMENTATION
+		if ( listClassifiers.getSelectedIndex() != -1 ) { // update latest edits of text field that might have occured
+			model.setListThresholds( listClassifiers.getSelectedIndex(), txtThresholds.getList() );
+		}
+		model.segmentSelected( listClassifiers.getSelectedIndices() );
 
-			@Override
-			public void run() {
-				// START SEGMENTATION
-				if ( listClassifiers.getSelectedIndex() != -1 ) { // update latest edits of text field that might have occured
-					model.setListThresholds( listClassifiers.getSelectedIndex(), txtThresholds.getList() );
-				}
-				model.segmentSelected( listClassifiers.getSelectedIndices() );
+		updateViewGivenSelection();
 
-				updateViewGivenSelection();
-			}
-
-		};
-		final Thread t = new Thread( runnable );
-		t.start();
+		model.fireProgressCompletedEvent();
 	}
 
 	private void updateViewGivenSelection() {

@@ -36,6 +36,8 @@ import com.univocity.parsers.csv.CsvParserSettings;
 import bdv.util.BdvHandlePanel;
 import bdv.util.BdvSource;
 import ij.IJ;
+import indago.ui.progress.DialogProgress;
+import indago.ui.progress.ProgressListener;
 import net.imglib2.IterableInterval;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.converter.Converters;
@@ -69,6 +71,8 @@ public class Tr2dWekaSegmentationModel implements BdvOwner {
 
 	private BdvHandlePanel bdvHandlePanel;
 	private final List< BdvSource > bdvSources = new ArrayList< >();
+
+	private final List< ProgressListener > progressListeners = new ArrayList<>();
 
 	/**
 	 * @param parentFolder
@@ -221,7 +225,7 @@ public class Tr2dWekaSegmentationModel implements BdvOwner {
 			if ( classification == null ) {
 				System.out.println( "need to segment for " + pfClassifier );
 				classification =
-						SegmentationMagic.returnClassification( getModel().getModel().getRawData() );
+						SegmentationMagic.returnClassification( getModel().getModel().getRawData(), progressListeners );
 				mapClassification.put( pfClassifier, classification );
 				IJ.save(
 						ImageJFunctions.wrap( classification, "classification image" ).duplicate(),
@@ -423,4 +427,62 @@ public class Tr2dWekaSegmentationModel implements BdvOwner {
 					new File( projectFolder.getFolder(), FILENAME_PREFIX_SUM_IMGS + i + ".tif" ).getAbsolutePath() );
 		}
 	}
+
+	/**
+	 * @param progressListener
+	 */
+	public void addProgressListener( final ProgressListener progressListener ) {
+		this.progressListeners.add( progressListener );
+	}
+
+	/**
+	 * @param maxProgress
+	 */
+	public void setTotalProgressSteps( final int maxProgress ) {
+		for ( final ProgressListener progressListener : this.progressListeners ) {
+			progressListener.setTotalProgressSteps( maxProgress );
+		}
+	}
+
+	/**
+	 *
+	 */
+	public void fireProgressEvent() {
+		for ( final ProgressListener progressListener : this.progressListeners ) {
+			progressListener.hasProgressed();
+		}
+	}
+
+	/**
+	 * @param newMessage
+	 */
+	public void fireProgressEvent( final String newMessage ) {
+		for ( final ProgressListener progressListener : this.progressListeners ) {
+			progressListener.hasProgressed( newMessage );
+		}
+	}
+
+	/**
+	 * @param newMessage
+	 * @param maxProgress
+	 */
+	public void fireNextProgressPhaseEvent( final String newMessage, final int maxProgress ) {
+		for ( final ProgressListener progressListener : this.progressListeners ) {
+			progressListener.resetProgress( newMessage, maxProgress );
+		}
+	}
+
+	public void fireProgressCompletedEvent() {
+		for ( final ProgressListener progressListener : this.progressListeners ) {
+			progressListener.hasCompleted();
+		}
+	}
+
+	/**
+	 * @param progress
+	 */
+	public void removeProgressListener( final DialogProgress progress ) {
+		this.progressListeners.remove( progress );
+	}
+
 }
