@@ -35,6 +35,10 @@
 			<groupId>com.indago</groupId>
 			<artifactId>Indago</artifactId>
 		</dependency>
+				<dependency>
+			<groupId>com.indago</groupId>
+			<artifactId>ui-elements</artifactId>
+		</dependency>
 		<dependency>
 			<groupId>sc.fiji</groupId>
 			<artifactId>bigdataviewer-vistools</artifactId>
