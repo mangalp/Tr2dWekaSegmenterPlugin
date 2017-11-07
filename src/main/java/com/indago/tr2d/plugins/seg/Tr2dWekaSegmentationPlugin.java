@@ -42,21 +42,6 @@ public class Tr2dWekaSegmentationPlugin implements Tr2dSegmentationPlugin {
 	}
 
 	/**
-	 * @see com.indago.tr2d.plugins.seg.Tr2dSegmentationPlugin#addInput(net.imglib2.RandomAccessibleInterval)
-	 */
-	@Override
-	public < T extends NativeType< T > > void addInput( final RandomAccessibleInterval< T > rai ) {
-	}
-
-	/**
-	 * @see com.indago.tr2d.plugins.seg.Tr2dSegmentationPlugin#getInputs()
-	 */
-	@Override
-	public < T extends NativeType< T > > List< RandomAccessibleInterval< T > > getInputs() {
-		return null;
-	}
-
-	/**
 	 * @see com.indago.tr2d.plugins.seg.Tr2dSegmentationPlugin#getOutputs()
 	 */
 	@Override
