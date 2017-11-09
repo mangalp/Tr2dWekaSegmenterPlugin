@@ -37,7 +37,7 @@ public class ParaMaxFlow< T extends RealType< T > > {
 	 * @param rai
 	 *            the image for which the graph in <code>Parametric</code> will
 	 *            be built. This <code>Img</code> must be 1d, 2d, or 3d.
-	 * @param probMap
+	 * @param potentialModulationImage
 	 *            if given this probability map must have the same
 	 *            dimensionality as <code>img</code>. All elements must be in
 	 *            [0,1] and will be used to modify the cost for unary and binary
