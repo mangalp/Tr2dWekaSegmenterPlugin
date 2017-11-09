@@ -263,7 +263,6 @@ public class Tr2dWekaSegmentationModel implements BdvOwner {
 
 	/**
 	 * @return
-	 * @throws IllegalAccessException
 	 */
 	public List< RandomAccessibleInterval< DoubleType > > getClassifications() {
 		final List< RandomAccessibleInterval< DoubleType > > ret = new ArrayList<>();
@@ -275,7 +274,6 @@ public class Tr2dWekaSegmentationModel implements BdvOwner {
 
 	/**
 	 * @return
-	 * @throws IllegalAccessException
 	 */
 	public List< RandomAccessibleInterval< IntType > > getSumImages() {
 		final List< RandomAccessibleInterval< IntType > > ret = new ArrayList<>();
@@ -314,7 +312,7 @@ public class Tr2dWekaSegmentationModel implements BdvOwner {
 	}
 
 	/**
-	 * @see com.indago.ui.bdv.BdvOwner#setBdvHandlePanel()
+	 * @see com.indago.ui.bdv.BdvOwner#bdvSetHandlePanel(BdvHandlePanel)
 	 */
 	@Override
 	public void bdvSetHandlePanel( final BdvHandlePanel bdvHandlePanel ) {
@@ -362,7 +360,7 @@ public class Tr2dWekaSegmentationModel implements BdvOwner {
 	}
 
 	/**
-	 * @param file
+	 * @param f
 	 */
 	public void importClassifier( final File f ) {
 		final ProjectFile pf = projectFolder.addFile( f.getName() );
@@ -385,7 +383,7 @@ public class Tr2dWekaSegmentationModel implements BdvOwner {
 	}
 
 	/**
-	 * @param i
+	 * @param idx
 	 */
 	public void removeClassifierAndData( final int idx ) {
 		linkedListModel.remove( idx );
