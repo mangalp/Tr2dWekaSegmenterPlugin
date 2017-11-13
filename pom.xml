@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>sc.fiji</groupId>
 		<artifactId>pom-indago</artifactId>
-		<version>2.2.2</version>
+		<version>2.2.4</version>
 	</parent>
 
 	<properties>
@@ -18,7 +18,7 @@
 
 	<groupId>com.indago.tr2d</groupId>
 	<artifactId>Tr2dWekaSegmenterPlugin</artifactId>
-	<version>0.1.1-SNAPSHOT</version>
+	<version>0.1.2-SNAPSHOT</version>
 
 	<name>Tr2dWekaSegmenterPlugin</name>
 	<description>Segmentation plugin for tr2d based on Fiji's Trainable Weka Segmentation</description>
